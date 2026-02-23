@@ -25,12 +25,20 @@
 import { ref, computed, watch } from 'vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const sidebarOpen = ref(false)
+
+// Redirect to login if not authenticated
+onMounted(() => {
+  if (!authStore.isAuthenticated) {
+    navigateTo('/login')
+  }
+})
 
 const isChatsPage = computed(() => route.path.startsWith('/chats'))
 
 const currentChatId = computed(() => {
-  return route.params.id ? parseInt(route.params.id) : null
+  return route.params.id ? route.params.id : null
 })
 
 const toggleSidebar = () => {

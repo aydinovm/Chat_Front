@@ -141,7 +141,11 @@ const changePassword = async () => {
   if (!valid) return
 
   isSaving.value = true
-  const { error } = await usersStore.changePassword(passwordForm.value.currentPassword, passwordForm.value.newPassword)
+const { error } = await usersStore.changePassword(
+  passwordForm.value.currentPassword,
+  passwordForm.value.newPassword,
+  passwordForm.value.confirmPassword
+)
   if (error) {
     passwordError.value = error
   } else {

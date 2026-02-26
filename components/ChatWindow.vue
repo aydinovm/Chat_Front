@@ -296,10 +296,10 @@ const sendMessage = async () => {
   if (currentChat.value.chatStatus === 'closed') return
 
   isSending.value = true
+
   const text = newMessage.value
   newMessage.value = ''
 
-  // Optimistic message
   const tempMsg = {
     id: `temp-${Date.now()}`,
     text,
@@ -307,22 +307,24 @@ const sendMessage = async () => {
     time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
     isOwn: true,
     status: 'sending',
-    senderUserId: authStore.user?.userId,
-    initials: '?',
-    avatarColor: 'bg-gray-400'
+    senderUserId: authStore.user?.userId
   }
+
   chatsStore.messages.push(tempMsg)
   selectedImage.value = null
   scrollToBottom()
 
-  const { error } = await chatsStore.sendMessage(props.chatId, text)
+  const { data, error } = await chatsStore.sendMessage(props.chatId, text)
 
   if (error) {
     chatsStore.messages = chatsStore.messages.filter(m => m.id !== tempMsg.id)
     alert('Ошибка отправки сообщения: ' + error)
   } else {
-    // Status will be updated via SignalR MessageSent event
-    tempMsg.status = 'delivered'
+    // сервер принял
+    if (data?.messageId) {
+      tempMsg.id = data.messageId
+    }
+    tempMsg.status = 'sent'
   }
 
   isSending.value = false

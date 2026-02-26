@@ -52,18 +52,25 @@ export const useChatsStore = defineStore('chats', {
       this.isMessagesLoading = false
     },
 
-    async sendMessage(chatId, text, fileUrl = null) {
-      const { apiFetch } = useApi()
-      const { data, error } = await apiFetch(`/api/chat/${chatId}/messages`, {
-        method: 'POST',
-        body: {
-          text,
-          fileUrl,
-          type: fileUrl ? 'File' : 'Text'
-        }
-      })
-      return { data, error }
-    },
+async sendMessage(chatId, text, fileUrl = null) {
+  const { apiFetch } = useApi()
+
+  const type = fileUrl ? 3 : 1 // ✅ File=3, Text=1
+
+  const { data, error } = await apiFetch(`/api/chat/${chatId}/messages`, {
+    method: 'POST',
+    body: {
+      type,                 // ✅ number
+      text: text || null,
+      fileUrl: fileUrl || null
+    }
+  })
+
+  return {
+    data,
+    error: error?.data?.error || error?.message || error
+  }
+},
 
     async markAsRead(chatId) {
       const { apiFetch } = useApi()
@@ -171,7 +178,7 @@ function mapChatResponse(c) {
     time: formatTime(c.createdDate),
     unread: c.unreadMessagesCount || 0,
     chatStatus: c.status?.toLowerCase() || 'sent',
-    assignedTo: c.assignedToUserId || null,
+    assignedTo: c.assignedToFullName || c.assignedToUserName || null, // ← имя вместо UUID
     fromDepartmentId: c.fromDepartmentId,
     toDepartmentId: c.toDepartmentId,
     createdByUserId: c.createdByUserId,
@@ -198,17 +205,19 @@ function mapChatDetailResponse(c) {
 
 function mapMessageResponse(m) {
   const authStore = useAuthStore()
+  const u = resolveUser(m.senderUserId)
+
   return {
     id: m.id,
     senderUserId: m.senderUserId,
-    sender: m.senderUserId,
-    initials: '??',
+    sender: u.name,
+    initials: u.initials,
     avatarColor: colorForId(m.senderUserId),
     text: m.text,
     image: m.fileUrl || null,
     time: formatTime(m.sentAt),
     isOwn: m.senderUserId === authStore.user?.userId,
-    status: m.isRead ? 'read' : 'delivered',
+    status: m.isRead ? 'read' : 'sent',
     isRead: m.isRead
   }
 }
@@ -225,4 +234,13 @@ function formatTime(dateStr) {
   yesterday.setDate(yesterday.getDate() - 1)
   if (date.toDateString() === yesterday.toDateString()) return 'Вчера'
   return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
+}
+function resolveUser(userId) {
+  const usersStore = useUsersStore()
+  const u = usersStore.users?.find(x => x.id === userId)
+  if (!u) return { name: 'User', initials: '??' }
+  return {
+    name: u.fullName || `@${u.username}` || 'User',
+    initials: initials(u.fullName || u.username)
+  }
 }

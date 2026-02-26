@@ -3,7 +3,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-    apiBase: import.meta.env.NUXT_PUBLIC_API_BASE ?? 'https://localhost:7072',
+    apiBase: import.meta.env.NUXT_PUBLIC_API_BASE ?? 'https://localhost:7072 ',
     }
   },
 

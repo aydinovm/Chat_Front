@@ -47,13 +47,32 @@ export const useUsersStore = defineStore('users', {
       }
       return { data, error }
     },
+async changePassword(currentPassword, newPassword, confirmPassword) {
+  const { apiFetch } = useApi()
 
-    async changePassword(currentPassword, newPassword) {
-      const { apiFetch } = useApi()
-      return await apiFetch('/api/auth/change-password', {
-        method: 'POST',
-        body: { currentPassword, newPassword }
-      })
+  // фронтовая проверка confirmPassword оставим, в бэк не нужно
+  if (newPassword !== confirmPassword) {
+    return { data: null, error: 'Пароли не совпадают' }
+  }
+
+  const { data, error } = await apiFetch('/api/auth/change-password', {
+    method: 'POST',
+    body: {
+      oldPassword: currentPassword, // ✅ ВАЖНО
+      newPassword                  // ✅ ВАЖНО
     }
+  })
+
+  let message = null
+  if (error) {
+    message =
+      error?.data?.error ||
+      error?.data?.message ||
+      error?.message ||
+      'Не удалось сменить пароль'
+  }
+
+  return { data, error: message }
+}
   }
 })

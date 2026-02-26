@@ -95,7 +95,6 @@
 
         <!-- Список чатов -->
         <div class="flex-1 overflow-y-auto">
-          <!-- Loading -->
           <div v-if="chatsStore.isLoading" class="flex justify-center py-8">
             <svg class="w-6 h-6 animate-spin text-green-600" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -170,27 +169,62 @@
             </svg>
           </button>
         </div>
+
         <div class="px-6 py-4 space-y-4">
-          <div v-if="createError" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">{{ createError }}</div>
+          <div v-if="createError" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+            {{ createError }}
+          </div>
+
+          <!-- Департамент -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Департамент <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Департамент <span class="text-red-500">*</span>
+            </label>
             <select v-model="newChat.toDepartmentId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600">
               <option value="">Выберите департамент</option>
-              <option v-for="dept in departmentsStore.departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
+              <option v-for="dept in departmentsStore.departments" :key="dept.id" :value="dept.id">
+                {{ dept.name }}
+              </option>
             </select>
           </div>
+
+          <!-- Тема -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Тема <span class="text-red-500">*</span></label>
-            <input type="text" v-model="newChat.title" placeholder="Краткое описание" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600" />
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Тема <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              v-model="newChat.title"
+              placeholder="Краткое описание проблемы или вопроса"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+            />
           </div>
+
+          <!-- Описание — необязательно -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Описание <span class="text-red-500">*</span></label>
-            <textarea v-model="newChat.description" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Описание
+              <span class="text-gray-400 font-normal text-xs">(необязательно)</span>
+            </label>
+            <textarea
+              v-model="newChat.description"
+              placeholder="Подробно опишите ситуацию..."
+              rows="4"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"
+            ></textarea>
           </div>
         </div>
+
         <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button @click="showCreateChatModal = false" class="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium">Отмена</button>
-          <button @click="createChat" :disabled="!newChat.toDepartmentId || !newChat.title || !newChat.description || isCreating" class="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+          <button @click="showCreateChatModal = false" class="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium">
+            Отмена
+          </button>
+          <button
+            @click="createChat"
+            :disabled="!newChat.toDepartmentId || !newChat.title || isCreating"
+            class="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {{ isCreating ? 'Создание...' : 'Создать чат' }}
           </button>
         </div>
@@ -201,47 +235,76 @@
     <div v-if="showAssignModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showAssignModal = false">
       <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 class="text-xl font-bold text-gray-900">{{ assignType === 'user' ? 'Назначить пользователю' : 'Назначить департаменту' }}</h2>
+          <h2 class="text-xl font-bold text-gray-900">
+            {{ assignType === 'user' ? 'Назначить пользователю' : 'Назначить департаменту' }}
+          </h2>
           <button @click="showAssignModal = false" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+
         <div class="px-6 py-4 space-y-4">
-          <div v-if="assignError" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">{{ assignError }}</div>
+          <div v-if="assignError" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+            {{ assignError }}
+          </div>
+
           <div v-if="assignType === 'user'">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Пользователь <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Пользователь <span class="text-red-500">*</span>
+            </label>
             <select v-model="assignData.userId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600">
               <option value="">Выберите пользователя</option>
-              <option v-for="user in usersStore.users" :key="user.id" :value="user.id">{{ user.fullName }} ({{ user.departmentName }})</option>
+              <option v-for="user in usersStore.users" :key="user.id" :value="user.id">
+                {{ user.fullName }} ({{ user.departmentName }})
+              </option>
             </select>
           </div>
+
           <div v-if="assignType === 'department'">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Департамент <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Департамент <span class="text-red-500">*</span>
+            </label>
             <select v-model="assignData.departmentId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600">
               <option value="">Выберите департамент</option>
-              <option v-for="dept in departmentsStore.departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
+              <option v-for="dept in departmentsStore.departments" :key="dept.id" :value="dept.id">
+                {{ dept.name }}
+              </option>
             </select>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Причина <span class="text-red-500">*</span></label>
-            <select v-model="assignData.reason" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600">
-              <option value="">Выберите причину</option>
-              <option value="По нагрузке">По нагрузке</option>
-              <option value="По компетенции">По компетенции</option>
-              <option value="Отсутствие сотрудника">Отсутствие сотрудника</option>
-              <option value="Другое">Другое</option>
-            </select>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Причина <span class="text-red-500">*</span>
+            </label>
+<input
+  type="text"
+  v-model="assignData.reason"
+  placeholder="Укажите причину переназначения"
+  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+/>
           </div>
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Комментарий</label>
-            <textarea v-model="assignData.comment" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"></textarea>
+            <textarea
+              v-model="assignData.comment"
+              rows="3"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"
+            ></textarea>
           </div>
         </div>
+
         <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button @click="showAssignModal = false" class="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium">Отмена</button>
-          <button @click="confirmAssign" :disabled="!isAssignValid || isAssigning" class="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+          <button @click="showAssignModal = false" class="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium">
+            Отмена
+          </button>
+          <button
+            @click="confirmAssign"
+            :disabled="!isAssignValid || isAssigning"
+            class="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {{ isAssigning ? 'Назначение...' : 'Подтвердить' }}
           </button>
         </div>
@@ -301,14 +364,20 @@ const filteredChats = computed(() => {
   let list = chatsStore.chats
 
   if (activeTab.value === 'my') {
-    list = list.filter(c => c.assignedTo === authStore.currentUser?.userId || c.createdByUserId === authStore.currentUser?.userId)
+    list = list.filter(c =>
+      c.assignedTo === authStore.currentUser?.userId ||
+      c.createdByUserId === authStore.currentUser?.userId
+    )
   } else if (activeTab.value === 'active') {
     list = list.filter(c => c.chatStatus !== 'closed' && c.chatStatus !== 'resolved')
   }
 
   if (searchQuery.value) {
     const s = searchQuery.value.toLowerCase()
-    list = list.filter(c => c.name?.toLowerCase().includes(s) || c.lastMessage?.toLowerCase().includes(s))
+    list = list.filter(c =>
+      c.name?.toLowerCase().includes(s) ||
+      c.lastMessage?.toLowerCase().includes(s)
+    )
   }
 
   return list
@@ -320,10 +389,21 @@ const isAssignValid = computed(() => {
   return !!assignData.value.departmentId
 })
 
-const statusLabel = (s) => ({ sent: 'Отправлено', viewed: 'Просмотрено', resolved: 'Решено', closed: 'Закрыто' }[s] || 'Новый')
+const statusLabel = (s) => ({
+  sent: 'Отправлено',
+  viewed: 'Просмотрено',
+  resolved: 'Решено',
+  closed: 'Закрыто'
+}[s] || 'Новый')
+
 const statusClass = (s) => {
   const base = 'px-2.5 py-1 text-xs font-semibold rounded-full'
-  const c = { sent: 'bg-gray-200 text-gray-700', viewed: 'bg-blue-100 text-blue-700', resolved: 'bg-green-100 text-green-700', closed: 'bg-red-100 text-red-700' }
+  const c = {
+    sent: 'bg-gray-200 text-gray-700',
+    viewed: 'bg-blue-100 text-blue-700',
+    resolved: 'bg-green-100 text-green-700',
+    closed: 'bg-red-100 text-red-700'
+  }
   return `${base} ${c[s] || 'bg-gray-100 text-gray-600'}`
 }
 
@@ -337,10 +417,16 @@ const openAssignModal = (type) => {
 }
 
 const createChat = async () => {
-  if (!newChat.value.toDepartmentId || !newChat.value.title || !newChat.value.description) return
+  if (!newChat.value.toDepartmentId || !newChat.value.title) return
   isCreating.value = true
   createError.value = ''
-  const { error } = await chatsStore.createChat(newChat.value.toDepartmentId, newChat.value.title, newChat.value.description)
+
+  const { error } = await chatsStore.createChat(
+    newChat.value.toDepartmentId,
+    newChat.value.title,
+    newChat.value.description || null
+  )
+
   if (error) {
     createError.value = error
   } else {
@@ -354,6 +440,7 @@ const confirmAssign = async () => {
   if (!isAssignValid.value) return
   isAssigning.value = true
   assignError.value = ''
+
   const { error } = await chatsStore.reassignChat(
     props.currentChatId,
     assignData.value.userId || null,
@@ -361,6 +448,7 @@ const confirmAssign = async () => {
     assignData.value.reason,
     assignData.value.comment
   )
+
   if (error) {
     assignError.value = error
   } else {
@@ -375,7 +463,6 @@ onMounted(async () => {
   await departmentsStore.fetchDepartments()
 })
 
-// Закрытие выпадающего меню при клике вне
 if (process.client) {
   window.addEventListener('click', (e) => {
     if (!e.target.closest('.relative')) showAssignMenu.value = false

@@ -57,7 +57,11 @@
                 <td class="px-6 py-4">
                   <div class="font-semibold text-gray-900">{{ dept.name }}</div>
                 </td>
-                <td class="px-6 py-4 text-gray-700">{{ dept.type }}</td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-sm font-medium">
+                    {{ getDepartmentTypeLabel(dept.type) }}
+                  </span>
+                </td>
                 <td class="px-6 py-4">
                   <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">{{ dept.usersCount }} чел.</span>
                 </td>
@@ -118,14 +122,37 @@
         </div>
         <div class="px-6 py-4 space-y-4">
           <div v-if="modalError" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">{{ modalError }}</div>
+
+          <!-- Название -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Название <span class="text-red-500">*</span></label>
-            <input type="text" v-model="departmentForm.name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600" />
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Название <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              v-model="departmentForm.name"
+              placeholder="Название департамента"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+            />
           </div>
+
+          <!-- Тип — selectbox из enum -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Тип <span class="text-red-500">*</span></label>
-            <input type="text" v-model="departmentForm.type" placeholder="Например: IT, HR, Finance" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600" />
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Тип <span class="text-red-500">*</span>
+            </label>
+            <select
+              v-model="departmentForm.type"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+            >
+              <option value="">Выберите тип</option>
+              <option v-for="t in departmentTypes" :key="t.value" :value="t.value">
+                {{ t.label }}
+              </option>
+            </select>
           </div>
+
+          <!-- Активен -->
           <div>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" v-model="departmentForm.isActive" class="w-5 h-5 text-green-600 rounded focus:ring-green-600" />
@@ -135,7 +162,11 @@
         </div>
         <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
           <button @click="closeModal" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">Отмена</button>
-          <button @click="saveDepartment" :disabled="!departmentForm.name || isSaving" class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition disabled:opacity-50">
+          <button
+            @click="saveDepartment"
+            :disabled="!departmentForm.name || !departmentForm.type || isSaving"
+            class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition disabled:opacity-50"
+          >
             {{ isSaving ? 'Сохранение...' : (editingDepartment ? 'Сохранить' : 'Создать') }}
           </button>
         </div>
@@ -160,6 +191,21 @@ const modalError = ref('')
 
 const departmentForm = ref({ name: '', type: '', isActive: true })
 
+// ✅ DepartmentTypeEnum: HR=1, Finance=2, Marketing=3, IT=4, Control=5
+const departmentTypes = [
+  { value: 1, label: 'HR' },
+  { value: 2, label: 'Finance' },
+  { value: 3, label: 'Marketing' },
+  { value: 4, label: 'IT' },
+  { value: 5, label: 'Control' }
+]
+
+const getDepartmentTypeLabel = (type) => {
+  // type может прийти как число или строка ('HR', 'IT' и т.д.)
+  if (typeof type === 'string') return type
+  return departmentTypes.find(t => t.value === type)?.label || type || '—'
+}
+
 const filteredDepartments = computed(() => {
   let list = departmentsStore.departments
   if (searchQuery.value) {
@@ -173,7 +219,11 @@ const filteredDepartments = computed(() => {
 
 const editDepartment = (dept) => {
   editingDepartment.value = dept
-  departmentForm.value = { name: dept.name, type: dept.type, isActive: dept.isActive }
+  // При редактировании конвертируем строку типа обратно в число если нужно
+  const typeValue = typeof dept.type === 'string'
+    ? departmentTypes.find(t => t.label === dept.type)?.value || ''
+    : dept.type
+  departmentForm.value = { name: dept.name, type: typeValue, isActive: dept.isActive }
   showAddDepartmentModal.value = true
   modalError.value = ''
 }
@@ -193,11 +243,16 @@ const deleteDepartment = async (dept) => {
 }
 
 const saveDepartment = async () => {
-  if (!departmentForm.value.name) return
+  if (!departmentForm.value.name || !departmentForm.value.type) return
   isSaving.value = true
   modalError.value = ''
 
-  const payload = { name: departmentForm.value.name, type: departmentForm.value.type, isActive: departmentForm.value.isActive }
+  const payload = {
+    name: departmentForm.value.name,
+    type: Number(departmentForm.value.type), // ✅ отправляем число как enum
+    isActive: departmentForm.value.isActive
+  }
+
   const { error } = editingDepartment.value
     ? await departmentsStore.updateDepartment(editingDepartment.value.id, payload)
     : await departmentsStore.createDepartment(payload)
